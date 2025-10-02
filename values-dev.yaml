@@ -1,0 +1,9 @@
+replicaCount: 1
+service:
+  type: ClusterIP
+indexHtml: |
+  <html>
+    <body style="font-family: sans-serif; text-align:center; margin-top:10%">
+      <h1>Hello from Marcelo custom values </h1>
+    </body>
+  </html>

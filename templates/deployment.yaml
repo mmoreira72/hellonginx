@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hellonginx.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "hellonginx.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "hellonginx.fullname" . }}
+    spec:
+      containers:
+      - name: nginx
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet: { path: "/", port: 80 }
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: { path: "/", port: 80 }
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        volumeMounts:
+        - name: web
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: index.html
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          mountPath: {{ .Values.persistence.mountPath }}
+        {{- end }}
+      volumes:
+      - name: web
+        configMap:
+          name: {{ include "hellonginx.fullname" . }}-index
+          items:
+          - key: index.html
+            path: index.html
+      {{- if .Values.persistence.enabled }}
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ include "hellonginx.fullname" . }}-data
+      {{- end }}
+

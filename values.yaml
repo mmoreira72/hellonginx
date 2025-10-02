@@ -1,0 +1,64 @@
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: "1.25-alpine"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP 
+  port: 80
+  #nodePort: 30080
+
+indexHtml: |
+  <html>
+    <head><title>Hello</title></head>
+    <body style="font-family: sans-serif; text-align: center; margin-top: 10%;">
+      <h1>Hello World</h1>
+      <p>Served by NGINX via Helm.</p>
+    </body>
+  </html>
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false" # TLS ends at Apache
+  hosts:
+    - host: app.scit.pt
+      paths:
+        - path: /
+          pathType: Prefix
+  # Optional TLS (not used if TLS ends at Apache)
+  tls: []
+
+hpa:
+  enabled: true
+  minReplicas: 2 
+  maxReplicas: 5
+  cpu:
+    enabled: true
+    averageUtilization: 50
+  memory:
+    enabled: false
+    averageValue: 200Mi
+
+persistence:
+  enabled: true
+
+  # where to mount in the container
+  mountPath: /usr/share/nginx/html/data
+
+  # capacity & mode
+  size: 1Gi
+  accessMode: ReadWriteOnce
+
+  # static PV on this node (no storage class)
+  useStaticLocalPV: true
+  nodeName: laserv0                 # kubernetes node name (kubectl get nodes)
+  hostPath: /var/local/pv/hellonginx-data
+
+  # leave storageClassName empty when using a static PV
+  storageClassName: ""
+
